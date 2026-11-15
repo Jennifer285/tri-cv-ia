@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outil de tri de CV assisté par IA · Cas fil rouge RH</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f4ef; --card:#fff; --ink:#1f2328; --muted:#5d6470; --line:#e3dfd6;
+  --accent:#2f5d50; --accent-soft:#e3eee9; --on-accent:#fff;
+  --warn:#b4542d; --warn-soft:#f8e6dc; --ok:#2e6b3a; --ok-soft:#e2f0e4; --amber:#8a5f00; --amber-soft:#fbf0d4;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#16181b; --card:#1f2226; --ink:#eceae5; --muted:#a3a8b0; --line:#33373d;
+    --accent:#7fc2ad; --accent-soft:#22352f; --on-accent:#10201b;
+    --warn:#f0a07c; --warn-soft:#3a271f; --ok:#8fd19b; --ok-soft:#1f3324; --amber:#e7c06a; --amber-soft:#352d1a; }
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+header{max-width:1100px;margin:0 auto;padding:26px 20px 6px}
+h1{font-family:Fraunces,serif;font-size:clamp(1.4rem,3vw,2rem);margin:0 0 4px}
+h2{font-family:Fraunces,serif;font-size:1.25rem;margin:0 0 6px}
+h3{font-size:1rem;margin:16px 0 8px}
+.sub,.muted{color:var(--muted)}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav .wrap{max-width:1100px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;padding:10px 20px}
+nav button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:999px;font:inherit;font-size:.9rem;cursor:pointer}
+nav button.active{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:20px}
+section{display:none} section.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.intro{border-left:4px solid var(--accent)}
+label.f{display:block;font-weight:500;margin:10px 0 4px}
+input[type=text],input[type=number],textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font:inherit;background:var(--bg);color:var(--ink)}
+textarea{min-height:90px;resize:vertical}
+textarea.big{min-height:260px;font-family:ui-monospace,Menlo,monospace;font-size:.85rem}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);padding:8px 13px;border-radius:9px;font:inherit;font-size:.9rem;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.danger{background:transparent;color:var(--warn);border-color:var(--warn)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:780px){.grid2{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:500}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78rem;font-weight:500}
+.p-ok{background:var(--ok-soft);color:var(--ok)} .p-warn{background:var(--warn-soft);color:var(--warn)}
+.p-amber{background:var(--amber-soft);color:var(--amber)} .p-n{background:var(--accent-soft);color:var(--accent)}
+.alert{border-radius:10px;padding:11px 14px;margin:10px 0;font-size:.92rem}
+.alert.warn{background:var(--warn-soft);color:var(--warn)} .alert.ok{background:var(--ok-soft);color:var(--ok)}
+.alert.info{background:var(--accent-soft);color:var(--accent)} .alert.amber{background:var(--amber-soft);color:var(--amber)}
+.crit{display:grid;grid-template-columns:1.2fr 2fr 90px 130px 40px;gap:8px;align-items:start;padding:8px 0;border-bottom:1px dashed var(--line)}
+@media(max-width:780px){.crit{grid-template-columns:1fr}}
+.cv{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.cv summary{cursor:pointer;font-weight:500}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;min-width:70px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:10px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi b{display:block;font-family:Fraunces,serif;font-size:1.5rem}
+.kpi span{color:var(--muted);font-size:.85rem}
+.steps{counter-reset:s;list-style:none;padding:0;margin:8px 0}
+.steps li{counter-increment:s;padding:6px 0 6px 34px;position:relative}
+.steps li::before{content:counter(s);position:absolute;left:0;top:6px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:.8rem;display:grid;place-items:center}
+.detail{font-size:.85rem;color:var(--muted)}
+.hidden{display:none}
+.nextbar{display:flex;justify-content:space-between;margin-top:6px}
+footer{max-width:1100px;margin:0 auto;padding:6px 20px 40px;font-size:.82rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Outil de tri de CV assisté par IA</h1>
+  <p class="sub">L'IA analyse et argumente, l'humain décide. Utiliser uniquement des CV fictifs : cet outil est public.</p>
+</header>
+<nav><div class="wrap" id="tabs">
+  <button data-t="s1" class="active">1 · Le poste</button>
+  <button data-t="s2">2 · Les critères</button>
+  <button data-t="s3">3 · Les CV</button>
+  <button data-t="s4">4 · Le prompt</button>
+  <button data-t="s5">5 · Les résultats</button>
+  <button data-t="s6">6 · La décision</button>
+  <button data-t="s7">Sauvegarde</button>
+</div></nav>
+
+<main>
+<!-- 1 POSTE -->
+<section id="s1" class="active">
+  <div class="card intro"><h2>Étape 1 · Définir le besoin</h2>
+  <p>Avant toute IA, on clarifie le poste. Un outil de tri ne vaut que par la qualité de l'offre et des critères qu'on lui donne.</p></div>
+  <div class="card">
+    <div class="grid2">
+      <div><label class="f">Entreprise</label><input type="text" id="entreprise"></div>
+      <div><label class="f">Intitulé du poste</label><input type="text" id="poste"></div>
+    </div>
+    <label class="f">Offre d'emploi (missions, profil, conditions)</label>
+    <textarea id="offre" style="min-height:280px"></textarea>
+  </div>
+  <div class="nextbar"><span></span><button class="btn" data-go="s2">Étape suivante</button></div>
+</section>
+
+<!-- 2 CRITERES -->
+<section id="s2">
+  <div class="card intro"><h2>Étape 2 · Construire la grille de critères</h2>
+  <p>Chaque critère doit avoir un <b>lien direct avec le poste</b> et pouvoir se vérifier dans un CV. Un critère « prérequis » n'entre pas dans le score : il sert à repérer les dossiers à vérifier.</p></div>
+  <div class="card">
+    <div class="crit" style="font-size:.76rem;text-transform:uppercase;color:var(--muted);letter-spacing:.04em"><div>Critère</div><div>Ce qu'on cherche dans le CV</div><div>Poids</div><div>Type</div><div></div></div>
+    <div id="critList"></div>
+    <div class="row" style="margin-top:12px;justify-content:space-between">
+      <button class="btn ghost" id="addCrit">+ Ajouter un critère</button>
+      <span id="poidsTotal"></span>
+    </div>
+    <div id="critAlert"></div>
+  </div>
+  <div class="nextbar"><button class="btn ghost" data-go="s1">Retour</button><button class="btn" data-go="s3">Étape suivante</button></div>
+</section>
+
+<!-- 3 CV -->
+<section id="s3">
+  <div class="card intro"><h2>Étape 3 · Réunir les CV</h2>
+  <p>Collez le texte de chaque CV ou importez un fichier .txt ou .pdf. Le nom reste dans votre navigateur : l'IA ne reçoit qu'un identifiant et un texte anonymisé.</p></div>
+  <div class="card">
+    <div class="row">
+      <button class="btn" id="addCv">+ Ajouter un CV</button>
+      <label class="btn ghost" style="display:inline-block">Importer des fichiers<input type="file" id="fileIn" accept=".txt,.pdf" multiple hidden></label>
+      <label class="row" style="gap:6px"><input type="checkbox" id="anon" checked> Anonymiser avant envoi à l'IA</label>
+    </div>
+    <p class="detail">L'anonymisation retire les e-mails, téléphones et les lignes commençant par Âge, Né·e le, Adresse, Nationalité, Situation familiale. Vérifiez toujours l'aperçu : un outil automatique peut en oublier.</p>
+    <div id="cvList" style="margin-top:10px"></div>
+  </div>
+  <div class="nextbar"><button class="btn ghost" data-go="s2">Retour</button><button class="btn" data-go="s4">Étape suivante</button></div>
+</section>
+
+<!-- 4 PROMPT -->
+<section id="s4">
+  <div class="card intro"><h2>Étape 4 · Générer le prompt et le soumettre à l'IA</h2>
+  <ol class="steps">
+    <li>Relisez le prompt généré ci-dessous : c'est exactement ce que l'IA va recevoir.</li>
+    <li>Cliquez sur « Copier le prompt ».</li>
+    <li>Ouvrez votre assistant IA (ChatGPT, Claude, Copilot, Mistral…), démarrez une nouvelle conversation et collez.</li>
+    <li>Copiez toute la réponse de l'IA et collez-la à l'étape 5.</li>
+  </ol></div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <span id="promptInfo" class="muted"></span>
+      <div class="row"><button class="btn" id="copyPrompt">Copier le prompt</button><span id="copyMsg" class="muted"></span></div>
+    </div>
+    <textarea id="prompt" class="big" readonly style="margin-top:10px;min-height:420px"></textarea>
+  </div>
+  <div class="nextbar"><button class="btn ghost" data-go="s3">Retour</button><button class="btn" data-go="s5">Étape suivante</button></div>
+</section>
+
+<!-- 5 RESULTATS -->
+<section id="s5">
+  <div class="card intro"><h2>Étape 5 · Lire l'analyse de l'IA</h2>
+  <p>Le score final est <b>recalculé par l'outil</b> à partir de vos poids, pas par l'IA. Vérifiez chaque preuve citée : l'IA peut se tromper ou inventer.</p></div>
+  <div class="card">
+    <label class="f">Réponse de l'IA</label>
+    <textarea id="reponse" class="big" placeholder="Collez ici la réponse complète de l'IA (le bloc JSON)."></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="analyser">Afficher le classement</button>
+      <button class="btn ghost" id="exemple">Charger un exemple de réponse</button>
+    </div>
+    <div id="parseMsg"></div>
+  </div>
+  <div id="resultats"></div>
+  <div class="nextbar"><button class="btn ghost" data-go="s4">Retour</button><button class="btn" data-go="s6">Étape suivante</button></div>
+</section>
+
+<!-- 6 DECISION -->
+<section id="s6">
+  <div class="card intro"><h2>Étape 6 · Décider, en humain</h2>
+  <p>L'IA propose, vous décidez. Pour chaque candidature, choisissez une suite et écrivez un motif que vous pourriez expliquer au candidat. Un refus sans motif n'est pas enregistré comme validé.</p></div>
+  <div class="kpis" id="decKpis"></div>
+  <div id="decAlert"></div>
+  <div class="card" style="overflow-x:auto"><table>
+    <thead><tr><th>Candidat·e</th><th>Score</th><th>Suggestion IA</th><th style="min-width:160px">Votre décision</th><th style="min-width:260px">Motif</th></tr></thead>
+    <tbody id="decBody"></tbody></table></div>
+  <div class="card">
+    <h3>Exporter le tableau de décision</h3>
+    <div class="row"><button class="btn" id="copyCsv">Copier pour un tableur</button><span id="csvMsg" class="muted"></span></div>
+  </div>
+  <div class="nextbar"><button class="btn ghost" data-go="s5">Retour</button><span></span></div>
+</section>
+
+<!-- 7 SAUVEGARDE -->
+<section id="s7">
+  <div class="card intro"><h2>Sauvegarde du projet</h2>
+  <p>Votre travail est enregistré automatiquement dans ce navigateur. Pour le transmettre ou changer d'ordinateur, exportez le projet.</p></div>
+  <div class="card">
+    <div class="row">
+      <button class="btn" id="dlProj">Télécharger le projet (.json)</button>
+      <label class="btn ghost" style="display:inline-block">Importer un projet<input type="file" id="projIn" accept=".json" hidden></label>
+      <button class="btn danger" id="resetAll">Revenir au cas d'exemple</button>
+    </div>
+    <p class="detail">Si le téléchargement ne démarre pas, copiez le texte ci-dessous et collez-le dans un fichier.</p>
+    <textarea id="projTxt" class="big" readonly></textarea>
+  </div>
+</section>
+</main>
+<footer>Cas pédagogique. Entreprise, offre et CV fictifs. Ne pas utiliser avec de vrais CV sans analyse de conformité (RGPD, AI Act).</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+/* ===================== DONNÉES DU CAS ===================== */
+const OFFRE=`Entreprise : PME familiale de transport et logistique, 180 salariés, 4 sites en région. Forte croissance, recrutements nombreux (conducteurs, préparateurs de commandes, caristes, exploitants). Pas encore de service recrutement structuré : la DRH reçoit environ 150 candidatures par offre.
+
+Poste : Chargé·e de recrutement en alternance (12 à 24 mois), rattaché·e à la DRH.
+
+Missions :
+- Rédiger et diffuser les offres d'emploi (job boards, réseaux sociaux, partenaires emploi)
+- Présélectionner les candidatures et mener des entretiens téléphoniques
+- Organiser des sessions de recrutement collectif avec les responsables de site
+- Suivre les candidats dans un tableau de bord et relancer les managers
+- Participer à l'accueil et à l'intégration des nouveaux salariés
+
+Profil recherché :
+- Inscription (ou admission) dans une formation RH de niveau Bac+3 à Bac+5 en alternance
+- Une première expérience en recrutement, en relation candidats ou en encadrement d'équipe est un plus
+- Aisance à l'oral et à l'écrit, sens du contact
+- À l'aise avec les outils numériques (tableur, job boards, réseaux sociaux professionnels)
+- Organisation, capacité à gérer plusieurs priorités
+- Intérêt pour les métiers opérationnels de la logistique
+
+Conditions : contrat d'apprentissage ou de professionnalisation, rythme selon l'école, poste basé au siège.`;
+
+const CRITERES=[
+ {id:"C1",nom:"Techniques de recrutement",desc:"Expériences concrètes : rédaction d'annonces, sourcing, présélection, conduite d'entretiens",poids:30,type:"score"},
+ {id:"C2",nom:"Communication et relation",desc:"Expériences prouvant l'aisance orale et écrite, la relation avec des candidats, clients ou équipes",poids:20,type:"score"},
+ {id:"C3",nom:"Outils numériques",desc:"Tableur, logiciel de recrutement (ATS), job boards, réseaux sociaux professionnels",poids:15,type:"score"},
+ {id:"C4",nom:"Organisation",desc:"Situations de gestion de plannings, de priorités multiples, de projets ou d'événements",poids:15,type:"score"},
+ {id:"C5",nom:"Connaissance du terrain",desc:"Connaissance des métiers opérationnels (logistique, transport, industrie, intérim)",poids:10,type:"score"},
+ {id:"C6",nom:"Formation RH en alternance",desc:"Inscription ou admission confirmée dans une formation RH Bac+3 à Bac+5 en alternance",poids:0,type:"prerequis"}
+];
+
+const CVS=[
+ {id:"CV01",nom:"Inès Moreau",texte:`Âge : 21 ans
+Adresse : 14 rue des Tilleuls, Villeurbanne
+ines.moreau@exemple.fr · 06 11 22 33 44
+FORMATION
+2026-2027 : Bachelor Ressources humaines en alternance (admise, sous réserve de contrat)
+2025 : BTS Négociation et digitalisation de la relation client
+EXPÉRIENCES
+Stage 8 semaines, agence d'emploi : rédaction de 15 annonces, présélection téléphonique de candidats
+2023-2025 : Vendeuse à temps partiel en magasin de sport (conseil client, mise en rayon)
+COMPÉTENCES
+Excel intermédiaire, LinkedIn, Canva
+CENTRES D'INTÉRÊT
+Théâtre d'improvisation`},
+ {id:"CV02",nom:"Thomas Nguyen",texte:`thomas.nguyen@exemple.fr
+FORMATION
+2026-2027 : Master 1 Gestion des ressources humaines en alternance (inscrit)
+2025 : Licence Administration économique et sociale
+EXPÉRIENCES
+Stage 3 mois, service RH d'un centre hospitalier : gestion administrative des dossiers du personnel, planification de 60 entretiens annuels
+Étés 2023 et 2024 : Préparateur de commandes en entrepôt
+COMPÉTENCES
+Excel avancé (tableaux croisés dynamiques), Word, utilisation d'un SIRH
+ENGAGEMENT
+Trésorier d'une association sportive (budget, organisation de tournois)`},
+ {id:"CV03",nom:"Awa Diallo",texte:`Situation familiale : mariée, un enfant
+awa.diallo@exemple.fr · 07 55 66 77 88
+FORMATION
+2026-2027 : Bachelor Ressources humaines en alternance (inscrite)
+2021 : BTS Support à l'action managériale
+EXPÉRIENCES
+2022-2024 : Assistante d'agence d'intérim spécialisée logistique : sourcing de caristes et préparateurs, environ 20 entretiens par semaine, suivi des missions et relation avec les entreprises clientes
+2024-2025 : Congé parental
+COMPÉTENCES
+Logiciel de recrutement (ATS), LinkedIn Recruiter, Excel, rédaction d'annonces`},
+ {id:"CV04",nom:"Lucas Bernard",texte:`lucas.bernard@exemple.fr
+FORMATION
+2026 : Bachelor Commerce
+Recherche une alternance en RH (dossier d'admission en cours dans une école)
+EXPÉRIENCES
+Stage 2 mois, commercial terrain en agence immobilière
+2024-2026 : Serveur en restauration le week-end
+COMPÉTENCES
+Pack Office
+QUALITÉS
+Dynamique, motivé, esprit d'équipe`},
+ {id:"CV05",nom:"Camille Lefèvre",texte:`Née le 12/03/2004
+camille.lefevre@exemple.fr
+FORMATION
+2026-2027 : Master Psychologie du travail et RH en alternance (inscrite)
+2025 : Licence de psychologie
+EXPÉRIENCES
+Stage 2 mois, cabinet de conseil RH : passation de tests, participation à des entretiens de bilan professionnel, rédaction de synthèses
+2022-2025 : Animatrice en centre de loisirs pendant les vacances (groupes de 12 enfants)
+COMPÉTENCES
+Excel bases, Teams, rédaction de synthèses`},
+ {id:"CV06",nom:"Yanis Benali",texte:`yanis.benali@exemple.fr · 06 98 76 54 32
+FORMATION
+2026-2027 : Bachelor Ressources humaines en alternance (inscrit)
+2025 : BUT Gestion des entreprises et des administrations
+EXPÉRIENCES
+2024-2025 : Alternance 1 an, PME de transport routier : aide au recrutement de conducteurs (diffusion des annonces, tri des candidatures, organisation de 4 sessions de recrutement collectif), accueil des nouveaux salariés
+COMPÉTENCES
+Excel avancé, espace employeur de job boards, Notion
+ENGAGEMENT
+Délégué de promotion pendant 2 ans`},
+ {id:"CV07",nom:"Sarah Kowalski",texte:`Nationalité : polonaise
+sarah.kowalski@exemple.fr
+FORMATION
+2026-2027 : Master Management des ressources humaines en alternance (admise)
+2024 : Licence Langues étrangères appliquées anglais polonais
+EXPÉRIENCES
+2024-2025 : Chargée de clientèle bilingue en centre de relation client (traitement de 50 appels par jour)
+Stage 6 semaines, service RH d'une entreprise industrielle : préparation des parcours d'intégration
+COMPÉTENCES
+Logiciel CRM, Excel, anglais et polonais courants`},
+ {id:"CV08",nom:"Hugo Martin",texte:`Âge : 34 ans
+hugo.martin@exemple.fr · 06 45 45 12 12
+FORMATION
+2026-2027 : Bachelor Ressources humaines en alternance, parcours reconversion (inscrit)
+2010 : Bac professionnel Logistique
+EXPÉRIENCES
+2016-2025 : Chef d'équipe en entrepôt (équipe de 12) : participation au recrutement des intérimaires, formation des nouveaux arrivants, élaboration des plannings
+2011-2016 : Cariste
+COMPÉTENCES
+Excel, logiciel de gestion d'entrepôt, gestion d'équipe`},
+ {id:"CV09",nom:"Léa Fontaine",texte:`lea.fontaine@exemple.fr
+FORMATION
+2026 : BTS Communication
+Recherche une alternance en communication ou en RH
+EXPÉRIENCES
+Stage 3 mois, community manager dans une agence de communication : création de publications, suivi des statistiques
+COMPÉTENCES
+Canva, réseaux sociaux, outils de gestion de publicités en ligne`},
+ {id:"CV10",nom:"Mathis Rousseau",texte:`mathis.rousseau@exemple.fr
+FORMATION
+2026-2027 : Master Droit social et RH en alternance (inscrit)
+2025 : Licence de droit, mémoire sur la non-discrimination à l'embauche
+EXPÉRIENCES
+2024 : Caissier en grande surface (6 mois, temps partiel)
+COMPÉTENCES
+Word, Excel bases, recherche juridique`}
+];
+
+const EXEMPLE={"candidats":[
+{"id":"CV01","evaluations":[{"critere":"C1","note":3,"preuve":"Stage en agence d'emploi : rédaction de 15 annonces, présélection téléphonique"},{"critere":"C2","note":4,"preuve":"2 ans de vente avec conseil client, théâtre d'improvisation"},{"critere":"C3","note":3,"preuve":"Excel intermédiaire, LinkedIn, Canva"},{"critere":"C4","note":3,"preuve":"Cumul études et emploi à temps partiel"},{"critere":"C5","note":1,"preuve":"Aucune expérience mentionnée dans la logistique ou l'industrie"},{"critere":"C6","note":4,"preuve":"Admise en Bachelor RH, sous réserve de contrat"}],"points_forts":"Première expérience concrète de présélection, aisance relationnelle","points_vigilance":"Expérience courte en recrutement","questions_entretien":["Comment avez-vous mené vos présélections téléphoniques ?"]},
+{"id":"CV02","evaluations":[{"critere":"C1","note":2,"preuve":"Planification d'entretiens annuels, pas de recrutement direct"},{"critere":"C2","note":3,"preuve":"Relation avec le personnel en service RH"},{"critere":"C3","note":4,"preuve":"Excel avancé, SIRH"},{"critere":"C4","note":4,"preuve":"Planification de 60 entretiens, organisation de tournois"},{"critere":"C5","note":4,"preuve":"Deux étés comme préparateur de commandes"},{"critere":"C6","note":5,"preuve":"Inscrit en Master 1 GRH en alternance"}],"points_forts":"Rigueur, outils, connaissance de l'entrepôt","points_vigilance":"Peu de pratique du recrutement","questions_entretien":["Qu'avez-vous retenu de votre expérience en entrepôt pour recruter des préparateurs ?"]},
+{"id":"CV03","evaluations":[{"critere":"C1","note":5,"preuve":"2 ans en agence d'intérim : sourcing, environ 20 entretiens par semaine"},{"critere":"C2","note":4,"preuve":"Relation candidats et entreprises clientes"},{"critere":"C3","note":4,"preuve":"ATS, LinkedIn Recruiter, Excel"},{"critere":"C4","note":4,"preuve":"Suivi des missions en parallèle d'un volume élevé d'entretiens"},{"critere":"C5","note":5,"preuve":"Agence spécialisée logistique, recrutement de caristes et préparateurs"},{"critere":"C6","note":5,"preuve":"Inscrite en Bachelor RH en alternance"}],"points_forts":"Expérience directement transposable au poste","points_vigilance":"Aucun point lié aux critères","questions_entretien":["Quelles méthodes de sourcing utilisiez-vous pour les caristes ?"]},
+{"id":"CV04","evaluations":[{"critere":"C1","note":1,"preuve":"Aucune expérience en recrutement mentionnée"},{"critere":"C2","note":3,"preuve":"Stage commercial terrain, service en restauration"},{"critere":"C3","note":2,"preuve":"Pack Office uniquement"},{"critere":"C4","note":2,"preuve":"Peu d'éléments factuels"},{"critere":"C5","note":1,"preuve":"Non renseigné"},{"critere":"C6","note":2,"preuve":"Dossier d'admission en cours, non confirmé"}],"points_forts":"Contact client","points_vigilance":"Prérequis de formation non confirmé ; qualités annoncées sans exemple","questions_entretien":["Où en est votre admission en formation RH ?"]},
+{"id":"CV05","evaluations":[{"critere":"C1","note":3,"preuve":"Participation à des entretiens de bilan, passation de tests"},{"critere":"C2","note":5,"preuve":"Rédaction de synthèses, animation de groupes"},{"critere":"C3","note":2,"preuve":"Excel bases, Teams"},{"critere":"C4","note":3,"preuve":"Animation de groupes de 12 enfants"},{"critere":"C5","note":1,"preuve":"Non renseigné"},{"critere":"C6","note":5,"preuve":"Inscrite en Master Psychologie du travail et RH en alternance"}],"points_forts":"Écoute, écrit, méthodes d'évaluation","points_vigilance":"Outils numériques à développer","questions_entretien":["Comment adapteriez-vous un entretien de bilan à un entretien de recrutement ?"]},
+{"id":"CV06","evaluations":[{"critere":"C1","note":4,"preuve":"Diffusion d'annonces, tri des candidatures, 4 sessions de recrutement collectif"},{"critere":"C2","note":4,"preuve":"Accueil des nouveaux salariés, délégué de promotion"},{"critere":"C3","note":5,"preuve":"Excel avancé, job boards, Notion"},{"critere":"C4","note":5,"preuve":"Organisation de sessions collectives"},{"critere":"C5","note":5,"preuve":"Alternance dans une PME de transport routier"},{"critere":"C6","note":5,"preuve":"Inscrit en Bachelor RH en alternance"}],"points_forts":"Expérience très proche du poste","points_vigilance":"Aucun point lié aux critères","questions_entretien":["Comment organisiez-vous une session de recrutement collectif ?"]},
+{"id":"CV07","evaluations":[{"critere":"C1","note":2,"preuve":"Pas de recrutement direct, stage sur l'intégration"},{"critere":"C2","note":4,"preuve":"Chargée de clientèle bilingue, 50 appels par jour"},{"critere":"C3","note":3,"preuve":"CRM, Excel"},{"critere":"C4","note":3,"preuve":"Gestion d'un volume d'appels élevé"},{"critere":"C5","note":2,"preuve":"Stage dans une entreprise industrielle"},{"critere":"C6","note":5,"preuve":"Admise en Master MRH en alternance"}],"points_forts":"Communication, résistance au volume","points_vigilance":"Peu de pratique du recrutement","questions_entretien":["Qu'avez-vous mis en place pour l'intégration des nouveaux arrivants ?"]},
+{"id":"CV08","evaluations":[{"critere":"C1","note":4,"preuve":"Participation au recrutement des intérimaires pendant 9 ans"},{"critere":"C2","note":4,"preuve":"Encadrement et formation des nouveaux arrivants"},{"critere":"C3","note":3,"preuve":"Excel, logiciel de gestion d'entrepôt"},{"critere":"C4","note":5,"preuve":"Élaboration des plannings d'une équipe de 12"},{"critere":"C5","note":5,"preuve":"14 ans en entrepôt, cariste puis chef d'équipe"},{"critere":"C6","note":5,"preuve":"Inscrit en Bachelor RH, parcours reconversion"}],"points_forts":"Connaissance fine des métiers à recruter, encadrement","points_vigilance":"Outils de recrutement en ligne à confirmer","questions_entretien":["Qu'est-ce qui faisait, selon vous, un bon recrutement d'intérimaire ?"]},
+{"id":"CV09","evaluations":[{"critere":"C1","note":1,"preuve":"Aucune expérience en recrutement"},{"critere":"C2","note":3,"preuve":"Création de publications"},{"critere":"C3","note":4,"preuve":"Réseaux sociaux, outils de publicité en ligne, Canva"},{"critere":"C4","note":2,"preuve":"Peu d'éléments factuels"},{"critere":"C5","note":1,"preuve":"Non renseigné"},{"critere":"C6","note":1,"preuve":"Formation en communication, pas d'inscription en formation RH"}],"points_forts":"Compétences utiles pour la marque employeur","points_vigilance":"Prérequis de formation RH non rempli","questions_entretien":["Envisagez-vous une formation RH ?"]},
+{"id":"CV10","evaluations":[{"critere":"C1","note":2,"preuve":"Mémoire sur la non-discrimination à l'embauche, pas de pratique"},{"critere":"C2","note":2,"preuve":"Caissier, peu d'éléments"},{"critere":"C3","note":2,"preuve":"Word, Excel bases"},{"critere":"C4","note":3,"preuve":"Cumul études et emploi"},{"critere":"C5","note":1,"preuve":"Non renseigné"},{"critere":"C6","note":5,"preuve":"Inscrit en Master Droit social et RH en alternance"}],"points_forts":"Solide culture juridique sur la non-discrimination","points_vigilance":"Expérience professionnelle limitée","questions_entretien":["Comment appliqueriez-vous votre mémoire à un processus de tri de CV ?"]}
+]};
+
+/* ===================== ÉTAT ===================== */
+const KEY="triCV_v1";
+function defaults(){return{entreprise:"PME de transport et logistique (fictive)",poste:"Chargé·e de recrutement en alternance",offre:OFFRE,criteres:JSON.parse(JSON.stringify(CRITERES)),cvs:JSON.parse(JSON.stringify(CVS)),anon:true,reponse:"",resultats:null,decisions:{}}}
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))||defaults()}catch(e){S=defaults()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){} document.getElementById("projTxt").value=JSON.stringify(S,null,2)}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+
+/* ===================== ÉTAPE 1 ===================== */
+function bind1(){["entreprise","poste","offre"].forEach(k=>{$(k).value=S[k];$(k).oninput=e=>{S[k]=e.target.value;save()}})}
+
+/* ===================== ÉTAPE 2 ===================== */
+const RISQUES=["âge","age ","jeune","senior","homme","femme","sexe","genre","nationalit","origine","religion","enceinte","grossesse","situation familiale","enfant","marié","handicap","santé","apparence","physique","photo","adresse","lieu de résidence","domicile","habite","nom de famille","syndic","opinion","langue maternelle","natif","native","bonne présentation","accent","école prestigieuse","grande école"];
+function renderCrit(){
+ $("critList").innerHTML=S.criteres.map((c,i)=>`<div class="crit">
+  <input type="text" value="${esc(c.nom)}" data-i="${i}" data-f="nom">
+  <textarea data-i="${i}" data-f="desc" style="min-height:44px">${esc(c.desc)}</textarea>
+  <input type="number" min="0" max="100" value="${c.poids}" data-i="${i}" data-f="poids" ${c.type==="prerequis"?"disabled":""}>
+  <select data-i="${i}" data-f="type"><option value="score" ${c.type==="score"?"selected":""}>Noté</option><option value="prerequis" ${c.type==="prerequis"?"selected":""}>Prérequis</option></select>
+  <button class="btn danger" data-del="${i}" title="Supprimer">×</button></div>`).join("");
+ $("critList").querySelectorAll("[data-f]").forEach(el=>el.onchange=e=>{
+  const c=S.criteres[e.target.dataset.i],f=e.target.dataset.f;
+  c[f]=f==="poids"?Math.max(0,+e.target.value||0):e.target.value;
+  if(f==="type"&&c.type==="prerequis")c.poids=0;
+  save();renderCrit()});
+ $("critList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{S.criteres.splice(+b.dataset.del,1);renumber();save();renderCrit()});
+ const tot=S.criteres.filter(c=>c.type==="score").reduce((a,c)=>a+(+c.poids||0),0);
+ $("poidsTotal").innerHTML=`Total des poids : <b>${tot}</b> ${tot===100?'<span class="pill p-ok">OK</span>':'<span class="pill p-amber">ramené à 100 au calcul</span>'}`;
+ const flags=[];
+ S.criteres.forEach(c=>{const t=(c.nom+" "+c.desc).toLowerCase();RISQUES.forEach(r=>{if(t.includes(r))flags.push(`« ${c.nom} » contient « ${r.trim()} »`)})});
+ $("critAlert").innerHTML=flags.length?`<div class="alert warn"><b>Critère potentiellement discriminatoire :</b><br>${flags.map(esc).join("<br>")}<br>Vérifiez qu'il est lié au poste et qu'il ne figure pas parmi les motifs interdits par l'article L1132-1 du Code du travail.</div>`
+ :`<div class="alert ok">Aucun mot à risque détecté. Ce contrôle est automatique et limité : relisez chaque critère avec l'équipe.</div>`;
+}
+function renumber(){S.criteres.forEach((c,i)=>c.id="C"+(i+1))}
+
+/* ===================== ÉTAPE 3 ===================== */
+function anonymise(t){
+ return t.split("\n").filter(l=>!/^\s*(âge|age|né|née|né·e|date de naissance|adresse|nationalité|situation familiale|photo)\b/i.test(l))
+  .join("\n").replace(/[\w.+-]+@[\w-]+\.[\w.]+/g,"[e-mail retiré]").replace(/(\+33\s?|0)[1-9](?:[\s.-]?\d{2}){4}/g,"[téléphone retiré]")
+  .replace(/\s*·\s*\[/g," [").replace(/^\s*\[e-mail retiré\]\s*(\[téléphone retiré\])?\s*$/gm,"").replace(/\n{3,}/g,"\n\n").trim();
+}
+function renderCv(){
+ $("anon").checked=S.anon;
+ $("cvList").innerHTML=S.cvs.map((c,i)=>`<details class="cv"><summary>${esc(c.id)} · ${esc(c.nom||"Sans nom")}</summary>
+  <div class="grid2" style="margin-top:10px">
+   <div><label class="f">Nom (reste dans le navigateur)</label><input type="text" value="${esc(c.nom)}" data-i="${i}" data-f="nom">
+   <label class="f">Texte du CV</label><textarea data-i="${i}" data-f="texte" style="min-height:220px">${esc(c.texte)}</textarea></div>
+   <div><label class="f">Ce que l'IA recevra</label><textarea readonly style="min-height:276px" class="prev">${esc(S.anon?anonymise(c.texte):c.texte)}</textarea></div>
+  </div><div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn danger" data-del="${i}">Supprimer ce CV</button></div></details>`).join("")
+  +`<p class="muted">${S.cvs.length} CV</p>`;
+ $("cvList").querySelectorAll("[data-f]").forEach(el=>el.oninput=e=>{const c=S.cvs[e.target.dataset.i];c[e.target.dataset.f]=e.target.value;save();
+   if(e.target.dataset.f==="texte")e.target.closest(".cv").querySelector(".prev").value=S.anon?anonymise(c.texte):c.texte;
+   if(e.target.dataset.f==="nom")e.target.closest(".cv").querySelector("summary").textContent=c.id+" · "+(c.nom||"Sans nom")});
+ $("cvList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{S.cvs.splice(+b.dataset.del,1);renumCv();save();renderCv()});
+}
+function renumCv(){S.cvs.forEach((c,i)=>c.id="CV"+String(i+1).padStart(2,"0"))}
+function addCv(nom,texte){S.cvs.push({id:"",nom,texte});renumCv();save();renderCv()}
+async function readPdf(file){
+ if(!window.pdfjsLib)throw new Error("Lecteur PDF indisponible");
+ pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+ const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;let out=[];
+ for(let p=1;p<=pdf.numPages;p++){const tc=await (await pdf.getPage(p)).getTextContent();
+  let line="",lastY=null;tc.items.forEach(it=>{const y=it.transform[5];if(lastY!==null&&Math.abs(y-lastY)>3){out.push(line);line=""}line+=it.str;lastY=y});out.push(line)}
+ return out.join("\n");
+}
+
+/* ===================== ÉTAPE 4 ===================== */
+function buildPrompt(){
+ const sc=S.criteres.filter(c=>c.type==="score"),pr=S.criteres.filter(c=>c.type==="prerequis");
+ const L=[];
+ L.push("Tu es assistant·e en présélection de candidatures pour un service RH. Tu aides un recruteur humain : tu analyses et tu argumentes, tu ne prends aucune décision.");
+ L.push("","## CONTEXTE","Entreprise : "+S.entreprise,"Poste : "+S.poste,"","## OFFRE D'EMPLOI",S.offre);
+ L.push("","## GRILLE D'ÉVALUATION","Note chaque critère de 0 à 5 :","0 = aucune information dans le CV · 1 = très faible · 2 = faible · 3 = correct · 4 = solide · 5 = excellent, avec des preuves précises.","");
+ [...sc,...pr].forEach(c=>L.push(`- ${c.id} · ${c.nom}${c.type==="prerequis"?" (prérequis)":""} : ${c.desc}`));
+ L.push("","## RÈGLES OBLIGATOIRES",
+ "1. Évalue uniquement à partir des critères ci-dessus et de ce qui est écrit dans le CV.",
+ "2. Pour chaque note, cite une preuve courte tirée du CV. Si l'information est absente, mets 0 et écris « Non renseigné ». N'invente rien.",
+ "3. Ne tiens jamais compte, même indirectement, de : âge, genre, origine, nom, nationalité, lieu de résidence, situation familiale, santé, handicap, apparence, religion, opinions, ni de l'école fréquentée en tant que telle.",
+ "4. Une interruption de parcours n'est pas un critère : ne la pénalise pas.",
+ "5. Les qualités affirmées sans exemple (« dynamique », « motivé ») ne valent pas une preuve.",
+ "6. Ne calcule pas de score total et ne classe pas les candidats : l'outil s'en charge.",
+ "","## FORMAT DE RÉPONSE",
+ "Réponds uniquement par un bloc JSON valide, sans texte avant ni après, selon ce modèle :",
+ '{"candidats":[{"id":"CV01","evaluations":[{"critere":"C1","note":3,"preuve":"..."}],"points_forts":"...","points_vigilance":"...","questions_entretien":["..."]}]}',
+ `Inclus les ${S.cvs.length} candidats et tous les critères (${[...sc,...pr].map(c=>c.id).join(", ")}) pour chacun.`,
+ "","## CANDIDATURES");
+ S.cvs.forEach(c=>L.push("","### "+c.id,S.anon?anonymise(c.texte):c.texte));
+ return L.join("\n");
+}
+function renderPrompt(){const p=buildPrompt();$("prompt").value=p;$("promptInfo").textContent=`${S.cvs.length} CV · ${S.criteres.length} critères · ${p.length.toLocaleString("fr-FR")} caractères${S.anon?" · anonymisé":" · NON anonymisé"}`}
+
+/* ===================== ÉTAPE 5 ===================== */
+function parseRep(txt){
+ let t=txt.replace(/```(?:json)?/gi,"").trim();const a=t.indexOf("{"),b=t.lastIndexOf("}");
+ if(a<0||b<0)throw new Error("Aucun bloc JSON trouvé dans la réponse.");
+ const j=JSON.parse(t.slice(a,b+1));const list=Array.isArray(j)?j:j.candidats;
+ if(!Array.isArray(list))throw new Error("Le JSON ne contient pas de liste « candidats ».");
+ return list;
+}
+function compute(){
+ if(!S.resultats)return[];
+ const sc=S.criteres.filter(c=>c.type==="score"),pr=S.criteres.filter(c=>c.type==="prerequis");
+ const tot=sc.reduce((a,c)=>a+(+c.poids||0),0)||1;
+ return S.resultats.map(r=>{
+  const ev={};(r.evaluations||[]).forEach(e=>ev[e.critere]=e);
+  let s=0,manq=[];sc.forEach(c=>{const e=ev[c.id];if(!e||e.note===null||e.note===undefined)manq.push(c.id);s+=(+c.poids||0)*Math.max(0,Math.min(5,+(e?.note)||0))/5});
+  const score=Math.round(s/tot*100);
+  const prereqKo=pr.some(c=>!ev[c.id]||(+ev[c.id].note)<3);
+  const cv=S.cvs.find(c=>c.id===r.id);
+  const sugg=prereqKo?"verifier":score>=65?"entretien":score>=45?"approfondir":"non_prioritaire";
+  return{...r,ev,score,manq,prereqKo,nom:cv?cv.nom:"(CV introuvable)",inconnu:!cv,sugg};
+ }).sort((a,b)=>b.score-a.score);
+}
+const SUGG={entretien:["Entretien conseillé","p-ok"],approfondir:["À approfondir","p-amber"],non_prioritaire:["Non prioritaire","p-warn"],verifier:["Prérequis à vérifier","p-n"]};
+function renderRes(){
+ const R=compute();if(!R.length){$("resultats").innerHTML="";return}
+ const all=S.criteres;
+ const miss=S.cvs.filter(c=>!R.find(r=>r.id===c.id)).map(c=>c.id);
+ $("resultats").innerHTML=(miss.length?`<div class="alert warn">L'IA n'a pas analysé : ${miss.join(", ")}. Relancez-la pour ces CV.</div>`:"")+
+ `<div class="card" style="overflow-x:auto"><table><thead><tr><th>#</th><th>Candidat·e</th>${all.map(c=>`<th title="${esc(c.nom)}">${c.id}</th>`).join("")}<th>Score /100</th><th></th><th>Suggestion</th></tr></thead><tbody>
+ ${R.map((r,i)=>`<tr><td class="num">${i+1}</td><td><b>${esc(r.id)}</b><br><span class="muted">${esc(r.nom)}</span></td>
+  ${all.map(c=>{const e=r.ev[c.id];return`<td class="num" title="${esc(e?.preuve||"Non évalué")}">${e?esc(e.note):"-"}</td>`}).join("")}
+  <td class="num"><b>${r.score}</b></td><td><div class="bar"><i style="width:${r.score}%"></i></div></td>
+  <td><span class="pill ${SUGG[r.sugg][1]}">${SUGG[r.sugg][0]}</span></td></tr>`).join("")}
+ </tbody></table><p class="detail">Survolez une note pour lire la preuve. Seuils de suggestion : 65 et plus, entretien ; 45 à 64, à approfondir ; moins de 45, non prioritaire.</p></div>`+
+ R.map(r=>`<details class="cv card"><summary>${esc(r.id)} · ${esc(r.nom)} · ${r.score}/100 ${r.prereqKo?'<span class="pill p-n">Prérequis à vérifier</span>':""}</summary>
+  <table style="margin-top:8px"><thead><tr><th>Critère</th><th>Note</th><th>Preuve citée par l'IA</th><th>Vérifiée ?</th></tr></thead><tbody>
+  ${all.map(c=>{const e=r.ev[c.id];return`<tr><td>${esc(c.nom)}</td><td class="num">${e?esc(e.note):"-"}</td><td>${esc(e?.preuve||"Non évalué")}</td><td><input type="checkbox"></td></tr>`}).join("")}
+  </tbody></table>
+  <p><b>Points forts :</b> ${esc(r.points_forts)}</p><p><b>Points de vigilance :</b> ${esc(r.points_vigilance)}</p>
+  <p><b>Questions pour l'entretien :</b></p><ul>${(r.questions_entretien||[]).map(q=>`<li>${esc(q)}</li>`).join("")}</ul></details>`).join("");
+}
+
+/* ===================== ÉTAPE 6 ===================== */
+const DEC={"":"À décider",entretien:"Entretien",approfondir:"À approfondir",non_retenu:"Non retenu"};
+function renderDec(){
+ const R=compute();
+ if(!R.length){$("decBody").innerHTML='<tr><td colspan="5" class="muted">Affichez d\'abord le classement à l\'étape 5.</td></tr>';$("decKpis").innerHTML="";$("decAlert").innerHTML="";return}
+ $("decBody").innerHTML=R.map(r=>{const d=S.decisions[r.id]||{dec:"",motif:""};
+  const ko=d.dec==="non_retenu"&&d.motif.trim().length<15;
+  return`<tr><td><b>${esc(r.id)}</b><br><span class="muted">${esc(r.nom)}</span></td><td class="num">${r.score}</td>
+  <td><span class="pill ${SUGG[r.sugg][1]}">${SUGG[r.sugg][0]}</span></td>
+  <td><select data-id="${r.id}" data-f="dec">${Object.entries(DEC).map(([k,v])=>`<option value="${k}" ${d.dec===k?"selected":""}>${v}</option>`).join("")}</select></td>
+  <td><textarea data-id="${r.id}" data-f="motif" style="min-height:44px" placeholder="Motif lié aux critères du poste">${esc(d.motif)}</textarea>${ko?'<span class="pill p-warn">Motif à compléter</span>':""}</td></tr>`}).join("");
+ $("decBody").querySelectorAll("[data-f]").forEach(el=>el.onchange=e=>{const id=e.target.dataset.id;S.decisions[id]=S.decisions[id]||{dec:"",motif:""};S.decisions[id][e.target.dataset.f]=e.target.value;save();renderDec()});
+ const done=R.filter(r=>S.decisions[r.id]?.dec);
+ const map={entretien:"entretien",approfondir:"approfondir",non_prioritaire:"non_retenu",verifier:"approfondir"};
+ const same=done.filter(r=>map[r.sugg]===S.decisions[r.id].dec).length;
+ const motifs=done.filter(r=>S.decisions[r.id].motif.trim().length>=15).length;
+ const rate=done.length?Math.round(same/done.length*100):0;
+ $("decKpis").innerHTML=`<div class="kpi"><b>${done.length} / ${R.length}</b><span>décisions prises</span></div>
+  <div class="kpi"><b>${done.length?rate+" %":"-"}</b><span>décisions identiques à la suggestion de l'IA</span></div>
+  <div class="kpi"><b>${motifs}</b><span>décisions motivées</span></div>`;
+ $("decAlert").innerHTML= done.length>=5&&rate===100?`<div class="alert amber"><b>Question à vous poser :</b> vous suivez l'IA dans 100 % des cas. Avez-vous vérifié les preuves, ou validé par réflexe ? Une intervention humaine qui ne change jamais rien peut être considérée comme de façade.</div>`:"";
+}
+function csv(){
+ const R=compute(),crit=S.criteres;
+ const rows=[["ID","Nom",...crit.map(c=>c.id+" "+c.nom),"Score","Suggestion IA","Décision","Motif"]];
+ R.forEach(r=>{const d=S.decisions[r.id]||{};rows.push([r.id,r.nom,...crit.map(c=>r.ev[c.id]?.note??""),r.score,SUGG[r.sugg][0],DEC[d.dec||""],d.motif||""])});
+ return rows.map(r=>r.map(v=>String(v).replace(/[\t\n]/g," ")).join("\t")).join("\n");
+}
+async function copy(txt,msgEl,ta){try{await navigator.clipboard.writeText(txt);msgEl.textContent="Copié."}catch(e){if(ta){ta.focus();ta.select()}msgEl.textContent="Sélectionnez le texte et copiez-le (Ctrl+C)."}setTimeout(()=>msgEl.textContent="",3000)}
+
+/* ===================== NAVIGATION & ÉVÉNEMENTS ===================== */
+function go(t){
+ document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("active",b.dataset.t===t));
+ document.querySelectorAll("section").forEach(s=>s.classList.toggle("active",s.id===t));
+ if(t==="s4")renderPrompt(); if(t==="s5")renderRes(); if(t==="s6")renderDec();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>go(b.dataset.t));
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+$("addCrit").onclick=()=>{S.criteres.push({id:"",nom:"Nouveau critère",desc:"Ce qu'on cherche dans le CV",poids:10,type:"score"});renumber();save();renderCrit()};
+$("addCv").onclick=()=>{addCv("","Collez ici le texte du CV");const d=$("cvList").querySelectorAll("details");d[d.length-1].open=true};
+$("anon").onchange=e=>{S.anon=e.target.checked;save();renderCv()};
+$("fileIn").onchange=async e=>{for(const f of e.target.files){try{const t=f.name.toLowerCase().endsWith(".pdf")?await readPdf(f):await f.text();addCv(f.name.replace(/\.[^.]+$/,""),t)}catch(err){alertBox("s3","Impossible de lire « "+f.name+" » : "+err.message+". Copiez-collez son texte à la place.")}}e.target.value=""};
+function alertBox(sec,msg){const d=document.createElement("div");d.className="alert warn";d.textContent=msg;document.querySelector("#"+sec+" .card:nth-of-type(2)").prepend(d);setTimeout(()=>d.remove(),8000)}
+$("copyPrompt").onclick=()=>copy($("prompt").value,$("copyMsg"),$("prompt"));
+$("reponse").oninput=e=>{S.reponse=e.target.value;save()};
+$("analyser").onclick=()=>{try{S.resultats=parseRep($("reponse").value);save();$("parseMsg").innerHTML=`<div class="alert ok">${S.resultats.length} candidatures lues.</div>`;renderRes()}catch(err){$("parseMsg").innerHTML=`<div class="alert warn"><b>Lecture impossible :</b> ${esc(err.message)}<br>Vérifiez que vous avez copié toute la réponse. Vous pouvez aussi demander à l'IA : « Renvoie uniquement le JSON, sans texte autour. »</div>`}};
+$("exemple").onclick=()=>{$("reponse").value=JSON.stringify(EXEMPLE,null,2);S.reponse=$("reponse").value;$("analyser").click()};
+$("copyCsv").onclick=()=>copy(csv(),$("csvMsg"));
+$("dlProj").onclick=()=>{try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:"application/json"}));a.download="projet-tri-cv.json";document.body.appendChild(a);a.click();a.remove()}catch(e){}};
+$("projIn").onchange=async e=>{try{S=JSON.parse(await e.target.files[0].text());save();initAll();go("s1")}catch(err){alertBox("s7","Fichier de projet illisible.")}};
+$("resetAll").onclick=()=>{const b=$("resetAll");if(b.dataset.c){S=defaults();save();initAll();go("s1");b.textContent="Revenir au cas d'exemple";delete b.dataset.c}else{b.dataset.c=1;b.textContent="Confirmer : tout effacer";setTimeout(()=>{b.textContent="Revenir au cas d'exemple";delete b.dataset.c},4000)}};
+function initAll(){bind1();renderCrit();renderCv();$("reponse").value=S.reponse||"";save()}
+initAll();
+</script>
+</body>
+</html>
